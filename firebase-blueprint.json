@@ -1,0 +1,1181 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile with role-based access control and account status in M737 Medical Platform",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Unique Firebase Authentication UID matching document ID",
+          "maxLength": 128
+        },
+        "email": {
+          "type": "string",
+          "description": "Primary verified email address",
+          "maxLength": 128
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Full name or professional title of the user",
+          "maxLength": 128
+        },
+        "role": {
+          "type": "string",
+          "description": "Platform role assigned to the user",
+          "enum": ["doctor", "radiology_center", "laboratory", "pharmacy", "patient", "super_admin", "secretary"]
+        },
+        "status": {
+          "type": "string",
+          "description": "Account accreditation and approval state",
+          "enum": ["incomplete", "pending", "approved", "rejected", "suspended"]
+        },
+        "licenseNumber": {
+          "type": "string",
+          "description": "Iraqi medical syndicate or operational license number",
+          "maxLength": 64
+        },
+        "facilityName": {
+          "type": "string",
+          "description": "Associated clinic, lab, radiology center, or pharmacy name",
+          "maxLength": 128
+        },
+        "governorate": {
+          "type": "string",
+          "description": "Iraqi governorate where provider operates",
+          "maxLength": 64
+        },
+        "phone": {
+          "type": "string",
+          "description": "Contact telephone or WhatsApp number",
+          "maxLength": 32
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp of profile creation"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO timestamp of last profile modification"
+        }
+      },
+      "required": ["uid", "email", "displayName", "role", "status", "createdAt", "updatedAt"]
+    },
+    "Admin": {
+      "title": "Admin",
+      "description": "Verified platform administrator record",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth UID of administrator",
+          "maxLength": 128
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the administrator",
+          "maxLength": 128
+        },
+        "role": {
+          "type": "string",
+          "description": "Administrative authority designation",
+          "enum": ["super_admin"]
+        },
+        "grantedAt": {
+          "type": "string",
+          "description": "Timestamp when admin access was initialized"
+        }
+      },
+      "required": ["uid", "email", "role", "grantedAt"]
+    },
+    "DoctorProfile": {
+      "title": "DoctorProfile",
+      "description": "Detailed clinical practice profile, schedule, and fees for accredited doctors",
+      "type": "object",
+      "properties": {
+        "doctorId": {
+          "type": "string",
+          "description": "UID of the doctor",
+          "maxLength": 128
+        },
+        "fullName": {
+          "type": "string",
+          "description": "Doctor full legal/professional title",
+          "maxLength": 128
+        },
+        "photoURL": {
+          "type": "string",
+          "description": "Profile picture URL"
+        },
+        "specialty": {
+          "type": "string",
+          "description": "Primary medical specialty",
+          "maxLength": 128
+        },
+        "subspecialty": {
+          "type": "string",
+          "description": "Subspecialty or focused discipline",
+          "maxLength": 128
+        },
+        "qualifications": {
+          "type": "string",
+          "description": "Degrees, fellowships and board certifications",
+          "maxLength": 256
+        },
+        "experienceYears": {
+          "type": "number",
+          "description": "Years of clinical practice experience"
+        },
+        "clinicAddress": {
+          "type": "string",
+          "description": "Clinic street address, building and floor",
+          "maxLength": 256
+        },
+        "governorate": {
+          "type": "string",
+          "description": "Iraqi governorate of the clinic",
+          "maxLength": 64
+        },
+        "phone": {
+          "type": "string",
+          "description": "Clinic telephone or contact number",
+          "maxLength": 32
+        },
+        "whatsapp": {
+          "type": "string",
+          "description": "Direct WhatsApp line for clinic queries",
+          "maxLength": 32
+        },
+        "consultationFee": {
+          "type": "number",
+          "description": "Standard consultation fee in Iraqi Dinars (IQD)"
+        },
+        "workingDays": {
+          "type": "array",
+          "description": "Active clinical days of the week"
+        },
+        "workingHours": {
+          "type": "string",
+          "description": "Clinical working hours window",
+          "maxLength": 64
+        },
+        "mapsUrl": {
+          "type": "string",
+          "description": "Google Maps link to the clinic location"
+        },
+        "bio": {
+          "type": "string",
+          "description": "Brief professional overview for patients",
+          "maxLength": 500
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO timestamp"
+        }
+      },
+      "required": ["doctorId", "fullName", "specialty", "clinicAddress", "governorate", "consultationFee", "workingHours", "createdAt", "updatedAt"]
+    },
+    "Appointment": {
+      "title": "Appointment",
+      "description": "Clinical consultation appointment between doctor and patient",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique appointment identifier"
+        },
+        "doctorId": {
+          "type": "string",
+          "description": "UID of the doctor",
+          "maxLength": 128
+        },
+        "patientId": {
+          "type": "string",
+          "description": "UID of the patient",
+          "maxLength": 128
+        },
+        "patientName": {
+          "type": "string",
+          "description": "Full name of the patient",
+          "maxLength": 128
+        },
+        "patientPhone": {
+          "type": "string",
+          "description": "Phone number of patient",
+          "maxLength": 32
+        },
+        "doctorName": {
+          "type": "string",
+          "description": "Doctor name at booking",
+          "maxLength": 128
+        },
+        "specialty": {
+          "type": "string",
+          "description": "Specialty under which visit is booked",
+          "maxLength": 128
+        },
+        "date": {
+          "type": "string",
+          "description": "Appointment date YYYY-MM-DD"
+        },
+        "timeSlot": {
+          "type": "string",
+          "description": "Time slot string e.g. 17:30"
+        },
+        "status": {
+          "type": "string",
+          "description": "Status of the appointment",
+          "enum": ["pending", "confirmed", "rescheduled", "completed", "cancelled"]
+        },
+        "rescheduleReason": {
+          "type": "string",
+          "description": "Doctor reason for rescheduling"
+        },
+        "rescheduleProposedDate": {
+          "type": "string",
+          "description": "Proposed new date and time"
+        },
+        "consultationType": {
+          "type": "string",
+          "description": "Type of consultation",
+          "enum": ["in_person", "followup", "urgent"]
+        },
+        "notes": {
+          "type": "string",
+          "description": "Clinical or appointment notes",
+          "maxLength": 500
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO timestamp"
+        }
+      },
+      "required": ["doctorId", "patientName", "date", "timeSlot", "status", "createdAt", "updatedAt"]
+    },
+    "MedicalRecord": {
+      "title": "MedicalRecord",
+      "description": "Confidential patient lab results, radiology imaging, prescriptions, and summaries",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Record identifier"
+        },
+        "patientId": {
+          "type": "string",
+          "description": "UID of the patient",
+          "maxLength": 128
+        },
+        "patientName": {
+          "type": "string",
+          "description": "Patient full name",
+          "maxLength": 128
+        },
+        "doctorId": {
+          "type": "string",
+          "description": "UID of attending doctor",
+          "maxLength": 128
+        },
+        "recordType": {
+          "type": "string",
+          "description": "Type of diagnostic or clinical document",
+          "enum": ["lab_result", "radiology_report", "prescription", "clinical_note", "diagnostic_summary"]
+        },
+        "title": {
+          "type": "string",
+          "description": "Title or test name",
+          "maxLength": 128
+        },
+        "details": {
+          "type": "string",
+          "description": "Diagnostic findings or prescription details",
+          "maxLength": 1000
+        },
+        "sourceFacility": {
+          "type": "string",
+          "description": "Name of clinic, lab, or radiology center",
+          "maxLength": 128
+        },
+        "doctorNotes": {
+          "type": "string",
+          "description": "Attending doctor consultation comments",
+          "maxLength": 500
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO timestamp"
+        }
+      },
+      "required": ["patientId", "doctorId", "recordType", "title", "createdAt", "updatedAt"]
+    },
+    "SecretaryDelegation": {
+      "title": "SecretaryDelegation",
+      "description": "Clinic reception permissions granted by the doctor",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Delegation ID"
+        },
+        "doctorId": {
+          "type": "string",
+          "description": "UID of delegating doctor",
+          "maxLength": 128
+        },
+        "doctorName": {
+          "type": "string",
+          "description": "Doctor name",
+          "maxLength": 128
+        },
+        "secretaryEmail": {
+          "type": "string",
+          "description": "Email of secretary",
+          "maxLength": 128
+        },
+        "secretaryName": {
+          "type": "string",
+          "description": "Secretary full name",
+          "maxLength": 128
+        },
+        "secretaryUid": {
+          "type": "string",
+          "description": "Secretary UID once accepted",
+          "maxLength": 128
+        },
+        "secretaryPhone": {
+          "type": "string",
+          "description": "Secretary contact phone number",
+          "maxLength": 32
+        },
+        "permissions": {
+          "type": "array",
+          "description": "Granted clinic administrative permissions"
+        },
+        "status": {
+          "type": "string",
+          "description": "Delegation state",
+          "enum": ["active", "revoked", "pending"]
+        },
+        "acceptedAt": {
+          "type": "string",
+          "description": "ISO timestamp when delegation was accepted"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO timestamp"
+        }
+      },
+      "required": ["doctorId", "secretaryEmail", "status", "createdAt", "updatedAt"]
+    },
+    "SecretaryAssignment": {
+      "title": "SecretaryAssignment",
+      "description": "Active doctor-secretary pairing document mapping secretary UID directly to assigned doctor",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Secretary UID matching document key",
+          "maxLength": 128
+        },
+        "secretaryUid": {
+          "type": "string",
+          "description": "Secretary UID",
+          "maxLength": 128
+        },
+        "secretaryEmail": {
+          "type": "string",
+          "description": "Secretary email address",
+          "maxLength": 128
+        },
+        "secretaryName": {
+          "type": "string",
+          "description": "Secretary full name",
+          "maxLength": 128
+        },
+        "secretaryPhone": {
+          "type": "string",
+          "description": "Secretary phone number",
+          "maxLength": 32
+        },
+        "doctorId": {
+          "type": "string",
+          "description": "UID of assigned doctor",
+          "maxLength": 128
+        },
+        "doctorName": {
+          "type": "string",
+          "description": "Doctor full name",
+          "maxLength": 128
+        },
+        "doctorSpecialty": {
+          "type": "string",
+          "description": "Doctor clinical specialty",
+          "maxLength": 128
+        },
+        "clinicAddress": {
+          "type": "string",
+          "description": "Clinic physical address",
+          "maxLength": 256
+        },
+        "clinicPhone": {
+          "type": "string",
+          "description": "Clinic phone number",
+          "maxLength": 32
+        },
+        "permissions": {
+          "type": "array",
+          "description": "Granted operational permissions"
+        },
+        "status": {
+          "type": "string",
+          "description": "Assignment active status",
+          "enum": ["active", "revoked"]
+        },
+        "delegationId": {
+          "type": "string",
+          "description": "Associated delegation document ID",
+          "maxLength": 128
+        },
+        "assignedAt": {
+          "type": "string",
+          "description": "ISO timestamp of assignment creation"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO timestamp of assignment update"
+        },
+        "lastActiveAt": {
+          "type": "string",
+          "description": "ISO timestamp of secretary last activity"
+        }
+      },
+      "required": ["secretaryUid", "doctorId", "status", "assignedAt", "updatedAt"]
+    },
+    "ClinicAuditLog": {
+      "title": "ClinicAuditLog",
+      "description": "Audit trail log of front-desk and secretary actions in clinic",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Log entry unique ID",
+          "maxLength": 128
+        },
+        "doctorId": {
+          "type": "string",
+          "description": "UID of clinic doctor",
+          "maxLength": 128
+        },
+        "doctorName": {
+          "type": "string",
+          "description": "Doctor name",
+          "maxLength": 128
+        },
+        "actorUid": {
+          "type": "string",
+          "description": "UID of secretary or actor",
+          "maxLength": 128
+        },
+        "actorName": {
+          "type": "string",
+          "description": "Name of actor",
+          "maxLength": 128
+        },
+        "actorRole": {
+          "type": "string",
+          "description": "Role of actor",
+          "enum": ["secretary", "doctor", "admin"]
+        },
+        "action": {
+          "type": "string",
+          "description": "Action performed at front desk",
+          "enum": ["confirm_appointment", "reject_appointment", "reschedule_appointment", "cancel_appointment", "create_walkin", "checkin_patient", "complete_appointment"]
+        },
+        "appointmentId": {
+          "type": "string",
+          "description": "Target appointment ID",
+          "maxLength": 128
+        },
+        "patientName": {
+          "type": "string",
+          "description": "Target patient name",
+          "maxLength": 128
+        },
+        "details": {
+          "type": "string",
+          "description": "Action narrative or reason",
+          "maxLength": 500
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "ISO timestamp of the action"
+        }
+      },
+      "required": ["doctorId", "actorUid", "action", "details", "timestamp"]
+    },
+    "RadiologyProfile": {
+      "title": "RadiologyProfile",
+      "description": "Profile, services, equipment, and operating hours of an accredited Radiology & Ultrasound Center",
+      "type": "object",
+      "properties": {
+        "centerId": {
+          "type": "string",
+          "description": "UID of the center matching user profile",
+          "maxLength": 128
+        },
+        "centerName": {
+          "type": "string",
+          "description": "Official name of the radiology center",
+          "maxLength": 128
+        },
+        "logoUrl": {
+          "type": "string",
+          "description": "Center logo URL"
+        },
+        "licenseNumber": {
+          "type": "string",
+          "description": "Ministry of Health accreditation number",
+          "maxLength": 64
+        },
+        "address": {
+          "type": "string",
+          "description": "Full street address and building",
+          "maxLength": 256
+        },
+        "governorate": {
+          "type": "string",
+          "description": "Iraqi governorate",
+          "maxLength": 64
+        },
+        "phone": {
+          "type": "string",
+          "description": "Reception telephone number",
+          "maxLength": 32
+        },
+        "whatsapp": {
+          "type": "string",
+          "description": "WhatsApp dispatch line",
+          "maxLength": 32
+        },
+        "workingHours": {
+          "type": "string",
+          "description": "Daily operational hours window",
+          "maxLength": 64
+        },
+        "equipmentList": {
+          "type": "array",
+          "description": "Available diagnostic equipment and scanners"
+        },
+        "mapsUrl": {
+          "type": "string",
+          "description": "Google Maps location link"
+        },
+        "bio": {
+          "type": "string",
+          "description": "Center overview and diagnostic capabilities",
+          "maxLength": 500
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO timestamp"
+        }
+      },
+      "required": ["centerId", "centerName", "address", "governorate", "phone", "workingHours", "createdAt", "updatedAt"]
+    },
+    "RadiologyService": {
+      "title": "RadiologyService",
+      "description": "Imaging modalities and procedures offered by the radiology center",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Service ID"
+        },
+        "centerId": {
+          "type": "string",
+          "description": "Center UID",
+          "maxLength": 128
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of procedure",
+          "maxLength": 128
+        },
+        "modality": {
+          "type": "string",
+          "description": "Imaging modality",
+          "enum": ["ultrasound", "xray", "ct", "mri", "doppler", "mammogram"]
+        },
+        "price": {
+          "type": "number",
+          "description": "Price in IQD"
+        },
+        "preparationInstructions": {
+          "type": "string",
+          "description": "Patient fasting or contrast preparation notes",
+          "maxLength": 500
+        },
+        "estimatedReportHours": {
+          "type": "number",
+          "description": "Estimated turnaround time in hours"
+        },
+        "isAvailable": {
+          "type": "boolean",
+          "description": "Service operational status"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO timestamp"
+        }
+      },
+      "required": ["centerId", "name", "modality", "price", "isAvailable", "createdAt", "updatedAt"]
+    },
+    "RadiologyBooking": {
+      "title": "RadiologyBooking",
+      "description": "Patient booking for a radiology or ultrasound scan",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Booking ID"
+        },
+        "centerId": {
+          "type": "string",
+          "description": "Center UID",
+          "maxLength": 128
+        },
+        "centerName": {
+          "type": "string",
+          "description": "Center name",
+          "maxLength": 128
+        },
+        "patientId": {
+          "type": "string",
+          "description": "Patient UID",
+          "maxLength": 128
+        },
+        "patientName": {
+          "type": "string",
+          "description": "Patient name",
+          "maxLength": 128
+        },
+        "patientPhone": {
+          "type": "string",
+          "description": "Patient phone",
+          "maxLength": 32
+        },
+        "serviceId": {
+          "type": "string",
+          "description": "Service ID"
+        },
+        "serviceName": {
+          "type": "string",
+          "description": "Procedure name",
+          "maxLength": 128
+        },
+        "modality": {
+          "type": "string",
+          "description": "Modality",
+          "enum": ["ultrasound", "xray", "ct", "mri", "doppler", "mammogram"]
+        },
+        "date": {
+          "type": "string",
+          "description": "Booking date YYYY-MM-DD"
+        },
+        "timeSlot": {
+          "type": "string",
+          "description": "Time slot"
+        },
+        "status": {
+          "type": "string",
+          "description": "Booking status",
+          "enum": ["pending", "accepted", "rescheduled", "rejected", "completed", "cancelled"]
+        },
+        "rescheduleDate": {
+          "type": "string",
+          "description": "Proposed rescheduled date"
+        },
+        "rescheduleReason": {
+          "type": "string",
+          "description": "Reason for rescheduling"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Clinical referral indication notes",
+          "maxLength": 500
+        },
+        "reportReady": {
+          "type": "boolean",
+          "description": "Whether diagnostic report is published"
+        },
+        "reportId": {
+          "type": "string",
+          "description": "Linked report ID"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO timestamp"
+        }
+      },
+      "required": ["centerId", "patientName", "serviceName", "date", "status", "createdAt", "updatedAt"]
+    },
+    "RadiologyReport": {
+      "title": "RadiologyReport",
+      "description": "Certified diagnostic imaging report with findings and attachments",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Report ID"
+        },
+        "centerId": {
+          "type": "string",
+          "description": "Center UID",
+          "maxLength": 128
+        },
+        "centerName": {
+          "type": "string",
+          "description": "Center name",
+          "maxLength": 128
+        },
+        "patientId": {
+          "type": "string",
+          "description": "Patient UID",
+          "maxLength": 128
+        },
+        "patientName": {
+          "type": "string",
+          "description": "Patient full name",
+          "maxLength": 128
+        },
+        "bookingId": {
+          "type": "string",
+          "description": "Associated booking ID"
+        },
+        "serviceName": {
+          "type": "string",
+          "description": "Procedure title",
+          "maxLength": 128
+        },
+        "modality": {
+          "type": "string",
+          "description": "Modality",
+          "enum": ["ultrasound", "xray", "ct", "mri", "doppler", "mammogram"]
+        },
+        "clinicalIndication": {
+          "type": "string",
+          "description": "Referring reason"
+        },
+        "technique": {
+          "type": "string",
+          "description": "Scanning technique or protocol"
+        },
+        "findings": {
+          "type": "string",
+          "description": "Detailed anatomical findings",
+          "maxLength": 2000
+        },
+        "impression": {
+          "type": "string",
+          "description": "Radiologist final diagnostic impression",
+          "maxLength": 1000
+        },
+        "recommendations": {
+          "type": "string",
+          "description": "Further imaging or follow-up recommendations"
+        },
+        "radiologistName": {
+          "type": "string",
+          "description": "Signing radiologist doctor",
+          "maxLength": 128
+        },
+        "radiologistLicense": {
+          "type": "string",
+          "description": "Radiologist syndicate license",
+          "maxLength": 64
+        },
+        "fileUrl": {
+          "type": "string",
+          "description": "Secure DICOM or PDF report URL"
+        },
+        "status": {
+          "type": "string",
+          "description": "Report publishing state",
+          "enum": ["draft", "published"]
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO timestamp"
+        }
+      },
+      "required": ["centerId", "patientId", "patientName", "serviceName", "findings", "impression", "status", "createdAt", "updatedAt"]
+    },
+    "PatientNotification": {
+      "title": "PatientNotification",
+      "description": "In-app status notification for bookings and medical reports",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Notification ID"
+        },
+        "recipientUid": {
+          "type": "string",
+          "description": "Recipient UID",
+          "maxLength": 128
+        },
+        "title": {
+          "type": "string",
+          "description": "Notification heading",
+          "maxLength": 128
+        },
+        "message": {
+          "type": "string",
+          "description": "Notification body message",
+          "maxLength": 500
+        },
+        "type": {
+          "type": "string",
+          "description": "Notification category",
+          "enum": ["booking_update", "report_ready", "general"]
+        },
+        "read": {
+          "type": "boolean",
+          "description": "Whether read by user"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp"
+        }
+      },
+      "required": ["recipientUid", "title", "message", "type", "read", "createdAt"]
+    },
+    "LabProfile": {
+      "title": "LabProfile",
+      "description": "Accredited medical laboratory facility profile and operational parameters",
+      "type": "object",
+      "properties": {
+        "labId": { "type": "string", "maxLength": 128 },
+        "labName": { "type": "string", "maxLength": 128 },
+        "logoUrl": { "type": "string" },
+        "directorName": { "type": "string", "maxLength": 128 },
+        "licenseNumber": { "type": "string", "maxLength": 64 },
+        "phone": { "type": "string", "maxLength": 32 },
+        "whatsapp": { "type": "string", "maxLength": 32 },
+        "address": { "type": "string", "maxLength": 256 },
+        "governorate": { "type": "string", "maxLength": 64 },
+        "mapsUrl": { "type": "string" },
+        "workingHours": { "type": "string", "maxLength": 64 },
+        "equipmentList": { "type": "array" },
+        "homeCollectionAvailable": { "type": "boolean" },
+        "homeCollectionFee": { "type": "number" },
+        "bio": { "type": "string", "maxLength": 500 },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["labId", "labName", "directorName", "licenseNumber", "phone", "address", "governorate", "workingHours", "createdAt", "updatedAt"]
+    },
+    "LabTest": {
+      "title": "LabTest",
+      "description": "Medical laboratory test or clinical analysis panel catalog item",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "labId": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 128 },
+        "category": { "type": "string", "maxLength": 64 },
+        "price": { "type": "number" },
+        "estimatedHours": { "type": "number" },
+        "sampleType": { "type": "string", "maxLength": 64 },
+        "fastingInstructions": { "type": "string", "maxLength": 500 },
+        "normalRange": { "type": "string" },
+        "isAvailable": { "type": "boolean" },
+        "homeCollectionSupported": { "type": "boolean" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["labId", "name", "category", "price", "isAvailable", "createdAt", "updatedAt"]
+    },
+    "LabBooking": {
+      "title": "LabBooking",
+      "description": "Patient laboratory test order and specimen collection booking",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "labId": { "type": "string", "maxLength": 128 },
+        "labName": { "type": "string", "maxLength": 128 },
+        "patientId": { "type": "string", "maxLength": 128 },
+        "patientName": { "type": "string", "maxLength": 128 },
+        "patientPhone": { "type": "string", "maxLength": 32 },
+        "testId": { "type": "string" },
+        "testName": { "type": "string", "maxLength": 128 },
+        "category": { "type": "string", "maxLength": 64 },
+        "date": { "type": "string" },
+        "timeSlot": { "type": "string" },
+        "bookingType": { "type": "string", "enum": ["in_lab", "home_collection"] },
+        "homeAddress": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "accepted", "rescheduled", "rejected", "completed", "cancelled"] },
+        "sampleStatus": { "type": "string", "enum": ["pending_collection", "collected", "received", "processing", "completed", "cancelled"] },
+        "sampleBarcode": { "type": "string" },
+        "rescheduleDate": { "type": "string" },
+        "rescheduleReason": { "type": "string" },
+        "cancellationReason": { "type": "string" },
+        "notes": { "type": "string" },
+        "resultReady": { "type": "boolean" },
+        "resultId": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["labId", "patientName", "testName", "date", "status", "sampleStatus", "createdAt", "updatedAt"]
+    },
+    "LabResult": {
+      "title": "LabResult",
+      "description": "Certified laboratory test result report with parameter values and reference ranges",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "labId": { "type": "string", "maxLength": 128 },
+        "labName": { "type": "string", "maxLength": 128 },
+        "patientId": { "type": "string", "maxLength": 128 },
+        "patientName": { "type": "string", "maxLength": 128 },
+        "bookingId": { "type": "string" },
+        "testName": { "type": "string", "maxLength": 128 },
+        "category": { "type": "string" },
+        "sampleType": { "type": "string" },
+        "parameters": { "type": "array" },
+        "notes": { "type": "string" },
+        "pathologistName": { "type": "string", "maxLength": 128 },
+        "pathologistLicense": { "type": "string", "maxLength": 64 },
+        "fileUrl": { "type": "string" },
+        "attachedScans": { "type": "array" },
+        "reviewStatus": { "type": "string", "enum": ["draft", "reviewed", "released"] },
+        "status": { "type": "string", "enum": ["draft", "published"] },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["labId", "patientId", "patientName", "testName", "parameters", "status", "createdAt", "updatedAt"]
+    },
+    "PharmacyProfile": {
+      "title": "PharmacyProfile",
+      "description": "Accredited pharmacy facility profile, responsible pharmacist, and operational parameters",
+      "type": "object",
+      "properties": {
+        "pharmacyId": { "type": "string", "maxLength": 128 },
+        "pharmacyName": { "type": "string", "maxLength": 128 },
+        "ownerName": { "type": "string", "maxLength": 128 },
+        "licenseNumber": { "type": "string", "maxLength": 64 },
+        "phone": { "type": "string", "maxLength": 32 },
+        "whatsapp": { "type": "string", "maxLength": 32 },
+        "address": { "type": "string", "maxLength": 256 },
+        "governorate": { "type": "string", "maxLength": 64 },
+        "mapsUrl": { "type": "string" },
+        "workingHours": { "type": "string", "maxLength": 64 },
+        "logoUrl": { "type": "string" },
+        "deliveryAvailable": { "type": "boolean" },
+        "deliveryFee": { "type": "number" },
+        "nightDuty": { "type": "boolean" },
+        "bio": { "type": "string", "maxLength": 500 },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["pharmacyId", "pharmacyName", "ownerName", "licenseNumber", "phone", "address", "governorate", "workingHours", "createdAt", "updatedAt"]
+    },
+    "MedicineItem": {
+      "title": "MedicineItem",
+      "description": "Pharmaceutical medicine product with active ingredient, inventory stock, and expiry verification",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "pharmacyId": { "type": "string", "maxLength": 128 },
+        "pharmacyName": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 128 },
+        "activeIngredient": { "type": "string", "maxLength": 128 },
+        "brand": { "type": "string", "maxLength": 128 },
+        "manufacturer": { "type": "string", "maxLength": 128 },
+        "strength": { "type": "string", "maxLength": 64 },
+        "dosageForm": { "type": "string", "maxLength": 64 },
+        "packageSize": { "type": "string", "maxLength": 64 },
+        "price": { "type": "number" },
+        "quantity": { "type": "number" },
+        "minStockAlert": { "type": "number" },
+        "expiryDate": { "type": "string" },
+        "requiresPrescription": { "type": "boolean" },
+        "isAvailable": { "type": "boolean" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["pharmacyId", "name", "activeIngredient", "price", "quantity", "expiryDate", "requiresPrescription", "isAvailable", "createdAt", "updatedAt"]
+    },
+    "PharmacyOrder": {
+      "title": "PharmacyOrder",
+      "description": "Patient medicine inquiry, prescription order, or delivery request",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "pharmacyId": { "type": "string", "maxLength": 128 },
+        "pharmacyName": { "type": "string", "maxLength": 128 },
+        "patientId": { "type": "string", "maxLength": 128 },
+        "patientName": { "type": "string", "maxLength": 128 },
+        "patientPhone": { "type": "string", "maxLength": 32 },
+        "items": { "type": "array" },
+        "totalAmount": { "type": "number" },
+        "orderType": { "type": "string", "enum": ["pickup", "delivery"] },
+        "deliveryAddress": { "type": "string" },
+        "prescriptionUrl": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "accepted", "preparing", "ready_for_pickup", "out_for_delivery", "completed", "cancelled"] },
+        "pharmacistNotes": { "type": "string" },
+        "cancellationReason": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["pharmacyId", "patientName", "items", "totalAmount", "status", "createdAt", "updatedAt"]
+    },
+    "PatientProfile": {
+      "title": "PatientProfile",
+      "description": "Patient medical passport, emergency contact, and baseline health indicators",
+      "type": "object",
+      "properties": {
+        "patientId": { "type": "string", "maxLength": 128 },
+        "fullName": { "type": "string", "maxLength": 128 },
+        "medicalId": { "type": "string", "maxLength": 64 },
+        "email": { "type": "string" },
+        "phone": { "type": "string", "maxLength": 32 },
+        "governorate": { "type": "string", "maxLength": 64 },
+        "address": { "type": "string", "maxLength": 256 },
+        "emergencyContactName": { "type": "string", "maxLength": 128 },
+        "emergencyContactPhone": { "type": "string", "maxLength": 32 },
+        "bloodType": { "type": "string" },
+        "chronicDiseases": { "type": "array" },
+        "allergies": { "type": "array" },
+        "currentMedications": { "type": "array" },
+        "heightCm": { "type": "number" },
+        "weightKg": { "type": "number" },
+        "dateOfBirth": { "type": "string" },
+        "gender": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["patientId", "fullName", "medicalId", "phone", "governorate", "address", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles indexed by Firebase Auth UID"
+    },
+    "/admins/{adminId}": {
+      "schema": "Admin",
+      "description": "Cryptographically verified super administrators"
+    },
+    "/doctor_profiles/{doctorId}": {
+      "schema": "DoctorProfile",
+      "description": "Detailed doctor public and clinic settings"
+    },
+    "/appointments/{appointmentId}": {
+      "schema": "Appointment",
+      "description": "Patient and doctor consultation appointments"
+    },
+    "/medical_records/{recordId}": {
+      "schema": "MedicalRecord",
+      "description": "Confidential patient health documents and reports"
+    },
+    "/secretary_delegations/{delegationId}": {
+      "schema": "SecretaryDelegation",
+      "description": "Receptionist access controls assigned by doctor"
+    },
+    "/radiology_profiles/{centerId}": {
+      "schema": "RadiologyProfile",
+      "description": "Radiology center information, equipment and hours"
+    },
+    "/radiology_services/{serviceId}": {
+      "schema": "RadiologyService",
+      "description": "Imaging modalities and procedures offered by the center"
+    },
+    "/radiology_bookings/{bookingId}": {
+      "schema": "RadiologyBooking",
+      "description": "Patient scan bookings and triage status"
+    },
+    "/radiology_reports/{reportId}": {
+      "schema": "RadiologyReport",
+      "description": "Certified diagnostic ultrasound and imaging reports"
+    },
+    "/lab_profiles/{labId}": {
+      "schema": "LabProfile",
+      "description": "Accredited medical laboratory facility profile and operational parameters"
+    },
+    "/lab_tests/{testId}": {
+      "schema": "LabTest",
+      "description": "Medical laboratory test catalog items, pricing, and sample rules"
+    },
+    "/lab_bookings/{bookingId}": {
+      "schema": "LabBooking",
+      "description": "Patient lab orders, sample tracking, and appointment schedules"
+    },
+    "/lab_results/{resultId}": {
+      "schema": "LabResult",
+      "description": "Certified laboratory test results, parameter findings, and printable documents"
+    },
+    "/pharmacy_profiles/{pharmacyId}": {
+      "schema": "PharmacyProfile",
+      "description": "Accredited pharmacy facility profile, responsible pharmacist, and operational parameters"
+    },
+    "/medicines/{medicineId}": {
+      "schema": "MedicineItem",
+      "description": "Pharmaceutical medicine products, inventory levels, active ingredients, and expiry control"
+    },
+    "/pharmacy_orders/{orderId}": {
+      "schema": "PharmacyOrder",
+      "description": "Patient prescription orders, pickup/delivery requests, and status tracking"
+    },
+    "/notifications/{notificationId}": {
+      "schema": "PatientNotification",
+      "description": "Audit and notification alerts for patients and providers"
+    },
+    "/patient_profiles/{patientId}": {
+      "schema": "PatientProfile",
+      "description": "Patient medical health passport and emergency records"
+    },
+    "/secretary_assignments/{secretaryUid}": {
+      "schema": "SecretaryAssignment",
+      "description": "Direct active binding between secretary UID and doctor clinic"
+    },
+    "/clinic_audit_logs/{logId}": {
+      "schema": "ClinicAuditLog",
+      "description": "Front-desk audit trail of secretary appointment modifications"
+    }
+  }
+}

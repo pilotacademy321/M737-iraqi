@@ -1,0 +1,6 @@
+{
+  "name": "M737 Medical Platform",
+  "description": "منصة M737 الطبية المتكاملة تجمع بين الأطباء والمختبرات والأشعة والصيدليات والمرضى في مكان واحد لخدمة صحية أفضل.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

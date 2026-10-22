@@ -1,0 +1,503 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny all access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isSuperAdminEmail() {
+      return isSignedIn() 
+        && request.auth.token.email == 'bcgmoc@gmail.com' 
+        && request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+        || isSuperAdminEmail()
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidRole(role) {
+      return role in ['doctor', 'radiology_center', 'laboratory', 'pharmacy', 'patient', 'super_admin', 'secretary'];
+    }
+
+    function isValidStatus(status) {
+      return status in ['incomplete', 'pending', 'approved', 'rejected', 'suspended'];
+    }
+
+    // Blueprint Validation for User entity
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'displayName', 'role', 'status', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'email', 'displayName', 'role', 'status', 'licenseNumber', 'facilityName', 'governorate', 'phone', 'createdAt', 'updatedAt'])
+        && data.uid is string && data.uid.size() <= 128
+        && data.email is string && data.email.size() <= 128
+        && data.displayName is string && data.displayName.size() <= 128
+        && isValidRole(data.role)
+        && isValidStatus(data.status)
+        && data.createdAt is string
+        && data.updatedAt is string;
+    }
+
+    // Users Collection: /users/{userId}
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+
+      allow create: if isOwner(userId) 
+        && isValidUser(incoming())
+        && incoming().uid == userId
+        && (
+          (isSuperAdminEmail() && incoming().role == 'super_admin' && incoming().status == 'approved')
+          ||
+          (incoming().role == 'patient' && incoming().status == 'approved')
+          ||
+          (incoming().role in ['doctor', 'radiology_center', 'laboratory', 'pharmacy', 'secretary'] 
+           && incoming().status in ['incomplete', 'pending'])
+        );
+
+      allow update: if (
+        isAdmin() && isValidUser(incoming()) && incoming().uid == existing().uid && incoming().createdAt == existing().createdAt
+      ) || (
+        isOwner(userId) 
+        && isValidUser(incoming())
+        && incoming().uid == existing().uid
+        && incoming().role == existing().role
+        && incoming().status == existing().status
+        && incoming().createdAt == existing().createdAt
+        && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'licenseNumber', 'facilityName', 'governorate', 'phone', 'updatedAt'])
+      );
+
+      allow delete: if isAdmin();
+    }
+
+    // Admins Collection: /admins/{adminId}
+    match /admins/{adminId} {
+      allow get: if isOwner(adminId) || isAdmin();
+      allow list: if isAdmin();
+      allow create: if (isSuperAdminEmail() && adminId == request.auth.uid) || isAdmin();
+      allow update, delete: if isAdmin();
+    }
+
+    // Doctor Profiles: /doctor_profiles/{doctorId}
+    match /doctor_profiles/{doctorId} {
+      allow get, list: if isSignedIn();
+      allow create: if (isOwner(doctorId) || isAdmin()) 
+        && incoming().doctorId == doctorId
+        && incoming().doctorId == request.auth.uid;
+      allow update: if (isOwner(doctorId) || isAdmin())
+        && incoming().doctorId == existing().doctorId;
+      allow delete: if isAdmin();
+    }
+
+    function isSecretaryForDoctor(doctorId) {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/secretary_assignments/$(request.auth.uid))
+        && get(/databases/$(database)/documents/secretary_assignments/$(request.auth.uid)).data.doctorId == doctorId
+        && get(/databases/$(database)/documents/secretary_assignments/$(request.auth.uid)).data.status == 'active'
+      );
+    }
+
+    // Appointments Collection: /appointments/{appointmentId}
+    match /appointments/{appointmentId} {
+      allow get: if isSignedIn() && (
+        resource.data.doctorId == request.auth.uid || 
+        resource.data.patientId == request.auth.uid || 
+        isAdmin() ||
+        isSecretaryForDoctor(resource.data.doctorId)
+      );
+      allow list: if isSignedIn();
+
+      allow create: if isSignedIn() && (
+        incoming().doctorId == request.auth.uid || 
+        incoming().patientId == request.auth.uid || 
+        isSecretaryForDoctor(incoming().doctorId) ||
+        isAdmin()
+      );
+
+      allow update: if isSignedIn() && (
+        existing().doctorId == request.auth.uid || 
+        existing().patientId == request.auth.uid || 
+        isSecretaryForDoctor(existing().doctorId) ||
+        isAdmin()
+      ) && incoming().doctorId == existing().doctorId;
+
+      allow delete: if isAdmin();
+    }
+
+    // Medical Records: /medical_records/{recordId}
+    match /medical_records/{recordId} {
+      allow get: if isSignedIn() && (
+        resource.data.doctorId == request.auth.uid || 
+        resource.data.patientId == request.auth.uid || 
+        isAdmin()
+      );
+      allow list: if isSignedIn();
+
+      allow create: if isSignedIn() && (
+        incoming().doctorId == request.auth.uid || 
+        incoming().patientId == request.auth.uid || 
+        isAdmin()
+      );
+
+      allow update: if isSignedIn() && (
+        existing().doctorId == request.auth.uid || 
+        existing().patientId == request.auth.uid || 
+        isAdmin()
+      ) && incoming().patientId == existing().patientId;
+
+      allow delete: if isSignedIn() && (
+        existing().patientId == request.auth.uid || 
+        isAdmin()
+      );
+    }
+
+    // Secretary Delegations: /secretary_delegations/{delegationId}
+    match /secretary_delegations/{delegationId} {
+      allow get: if isSignedIn() && (
+        resource.data.doctorId == request.auth.uid || 
+        resource.data.secretaryEmail == request.auth.token.email || 
+        (resource.data.secretaryUid != null && resource.data.secretaryUid == request.auth.uid) ||
+        isAdmin()
+      );
+      allow list: if isSignedIn();
+
+      allow create: if isSignedIn() && (
+        incoming().doctorId == request.auth.uid || 
+        isAdmin()
+      );
+
+      allow update: if isSignedIn() && (
+        existing().doctorId == request.auth.uid || 
+        (
+          existing().secretaryEmail == request.auth.token.email 
+          && incoming().doctorId == existing().doctorId
+          && incoming().status == existing().status
+          && incoming().permissions == existing().permissions
+          && incoming().diff(existing()).affectedKeys().hasOnly(['secretaryUid', 'acceptedAt', 'updatedAt', 'secretaryPhone'])
+        ) ||
+        isAdmin()
+      );
+
+      allow delete: if isSignedIn() && (
+        existing().doctorId == request.auth.uid || 
+        isAdmin()
+      );
+    }
+
+    // Secretary Assignments: /secretary_assignments/{secretaryUid}
+    match /secretary_assignments/{secretaryUid} {
+      allow get: if isSignedIn() && (
+        secretaryUid == request.auth.uid || 
+        resource.data.doctorId == request.auth.uid || 
+        isAdmin()
+      );
+      allow list: if isSignedIn();
+
+      allow create: if isSignedIn() && (
+        incoming().doctorId == request.auth.uid ||
+        (
+          secretaryUid == request.auth.uid 
+          && incoming().delegationId != null
+          && exists(/databases/$(database)/documents/secretary_delegations/$(incoming().delegationId))
+          && get(/databases/$(database)/documents/secretary_delegations/$(incoming().delegationId)).data.doctorId == incoming().doctorId
+          && get(/databases/$(database)/documents/secretary_delegations/$(incoming().delegationId)).data.secretaryEmail == request.auth.token.email
+          && get(/databases/$(database)/documents/secretary_delegations/$(incoming().delegationId)).data.status == 'active'
+        ) ||
+        isAdmin()
+      );
+
+      allow update: if isSignedIn() && (
+        existing().doctorId == request.auth.uid ||
+        (secretaryUid == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['lastActiveAt', 'secretaryPhone', 'updatedAt'])) ||
+        isAdmin()
+      );
+
+      allow delete: if isSignedIn() && (
+        existing().doctorId == request.auth.uid ||
+        isAdmin()
+      );
+    }
+
+    // Clinic Audit Logs: /clinic_audit_logs/{logId}
+    match /clinic_audit_logs/{logId} {
+      allow get, list: if isSignedIn() && (
+        resource.data.doctorId == request.auth.uid || 
+        (resource.data.actorUid != null && resource.data.actorUid == request.auth.uid) ||
+        isSecretaryForDoctor(resource.data.doctorId) ||
+        isAdmin()
+      );
+      allow create: if isSignedIn() && (
+        incoming().actorUid == request.auth.uid ||
+        incoming().doctorId == request.auth.uid ||
+        isAdmin()
+      );
+      allow update, delete: if isAdmin();
+    }
+
+    // Radiology Profiles: /radiology_profiles/{centerId}
+    match /radiology_profiles/{centerId} {
+      allow get, list: if isSignedIn();
+      allow create: if (isOwner(centerId) || isAdmin()) 
+        && incoming().centerId == centerId
+        && incoming().centerId == request.auth.uid;
+      allow update: if (isOwner(centerId) || isAdmin())
+        && incoming().centerId == existing().centerId;
+      allow delete: if isAdmin();
+    }
+
+    // Radiology Services: /radiology_services/{serviceId}
+    match /radiology_services/{serviceId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && (
+        incoming().centerId == request.auth.uid || isAdmin()
+      );
+      allow update: if isSignedIn() && (
+        existing().centerId == request.auth.uid || isAdmin()
+      ) && incoming().centerId == existing().centerId;
+      allow delete: if isSignedIn() && (
+        existing().centerId == request.auth.uid || isAdmin()
+      );
+    }
+
+    // Radiology Bookings: /radiology_bookings/{bookingId}
+    match /radiology_bookings/{bookingId} {
+      allow get: if isSignedIn() && (
+        resource.data.centerId == request.auth.uid || 
+        resource.data.patientId == request.auth.uid || 
+        isAdmin()
+      );
+      allow list: if isSignedIn();
+
+      allow create: if isSignedIn() && (
+        incoming().centerId == request.auth.uid || 
+        incoming().patientId == request.auth.uid || 
+        isAdmin()
+      );
+
+      allow update: if isSignedIn() && (
+        existing().centerId == request.auth.uid || 
+        existing().patientId == request.auth.uid || 
+        isAdmin()
+      ) && incoming().centerId == existing().centerId;
+
+      allow delete: if isAdmin();
+    }
+
+    // Radiology Diagnostic Reports: /radiology_reports/{reportId}
+    match /radiology_reports/{reportId} {
+      allow get: if isSignedIn() && (
+        resource.data.centerId == request.auth.uid || 
+        resource.data.patientId == request.auth.uid || 
+        isAdmin()
+      );
+      allow list: if isSignedIn();
+
+      allow create: if isSignedIn() && (
+        incoming().centerId == request.auth.uid || 
+        isAdmin()
+      );
+
+      allow update: if isSignedIn() && (
+        existing().centerId == request.auth.uid || 
+        isAdmin()
+      ) && incoming().centerId == existing().centerId;
+
+      allow delete: if isAdmin();
+    }
+
+    // Laboratory Profiles: /lab_profiles/{labId}
+    match /lab_profiles/{labId} {
+      allow get, list: if isSignedIn();
+      allow create: if (isOwner(labId) || isAdmin()) 
+        && incoming().labId == labId
+        && incoming().labId == request.auth.uid;
+      allow update: if (isOwner(labId) || isAdmin())
+        && incoming().labId == existing().labId;
+      allow delete: if isAdmin();
+    }
+
+    // Laboratory Tests: /lab_tests/{testId}
+    match /lab_tests/{testId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && (
+        incoming().labId == request.auth.uid || isAdmin()
+      );
+      allow update: if isSignedIn() && (
+        existing().labId == request.auth.uid || isAdmin()
+      ) && incoming().labId == existing().labId;
+      allow delete: if isSignedIn() && (
+        existing().labId == request.auth.uid || isAdmin()
+      );
+    }
+
+    // Laboratory Bookings: /lab_bookings/{bookingId}
+    match /lab_bookings/{bookingId} {
+      allow get: if isSignedIn() && (
+        resource.data.labId == request.auth.uid || 
+        resource.data.patientId == request.auth.uid || 
+        isAdmin()
+      );
+      allow list: if isSignedIn();
+
+      allow create: if isSignedIn() && (
+        incoming().labId == request.auth.uid || 
+        incoming().patientId == request.auth.uid || 
+        isAdmin()
+      );
+
+      allow update: if isSignedIn() && (
+        existing().labId == request.auth.uid || 
+        existing().patientId == request.auth.uid || 
+        isAdmin()
+      ) && incoming().labId == existing().labId;
+
+      allow delete: if isAdmin();
+    }
+
+    // Laboratory Diagnostic Results: /lab_results/{resultId}
+    match /lab_results/{resultId} {
+      allow get: if isSignedIn() && (
+        resource.data.labId == request.auth.uid || 
+        resource.data.patientId == request.auth.uid || 
+        isAdmin()
+      );
+      allow list: if isSignedIn();
+
+      allow create: if isSignedIn() && (
+        incoming().labId == request.auth.uid || 
+        isAdmin()
+      );
+
+      allow update: if isSignedIn() && (
+        existing().labId == request.auth.uid || 
+        isAdmin()
+      ) && incoming().labId == existing().labId;
+
+      allow delete: if isAdmin();
+    }
+
+    // Pharmacy Profiles: /pharmacy_profiles/{pharmacyId}
+    match /pharmacy_profiles/{pharmacyId} {
+      allow get, list: if isSignedIn();
+      allow create: if (isOwner(pharmacyId) || isAdmin()) 
+        && incoming().pharmacyId == pharmacyId
+        && incoming().pharmacyId == request.auth.uid;
+      allow update: if (isOwner(pharmacyId) || isAdmin())
+        && incoming().pharmacyId == existing().pharmacyId;
+      allow delete: if isAdmin();
+    }
+
+    // Medicine Inventory: /medicines/{medicineId}
+    match /medicines/{medicineId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && (
+        incoming().pharmacyId == request.auth.uid || isAdmin()
+      );
+      allow update: if isSignedIn() && (
+        existing().pharmacyId == request.auth.uid || isAdmin()
+      ) && incoming().pharmacyId == existing().pharmacyId;
+      allow delete: if isSignedIn() && (
+        existing().pharmacyId == request.auth.uid || isAdmin()
+      );
+    }
+
+    // Pharmacy Orders / Inquiries: /pharmacy_orders/{orderId}
+    match /pharmacy_orders/{orderId} {
+      allow get: if isSignedIn() && (
+        resource.data.pharmacyId == request.auth.uid || 
+        resource.data.patientId == request.auth.uid || 
+        isAdmin()
+      );
+      allow list: if isSignedIn();
+
+      allow create: if isSignedIn() && (
+        incoming().pharmacyId == request.auth.uid || 
+        incoming().patientId == request.auth.uid || 
+        isAdmin()
+      );
+
+      allow update: if isSignedIn() && (
+        existing().pharmacyId == request.auth.uid || 
+        existing().patientId == request.auth.uid || 
+        isAdmin()
+      ) && incoming().pharmacyId == existing().pharmacyId;
+
+      allow delete: if isAdmin();
+    }
+
+    // Notifications: /notifications/{notificationId}
+    match /notifications/{notificationId} {
+      allow get: if isSignedIn() && (
+        resource.data.recipientUid == request.auth.uid || 
+        isAdmin()
+      );
+      allow list: if isSignedIn();
+
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && (
+        existing().recipientUid == request.auth.uid || 
+        isAdmin()
+      );
+      allow delete: if isSignedIn() && (
+        existing().recipientUid == request.auth.uid || 
+        isAdmin()
+      );
+    }
+
+    // Patient Profiles: /patient_profiles/{patientId}
+    match /patient_profiles/{patientId} {
+      allow get: if isSignedIn() && (
+        isOwner(patientId) || 
+        isAdmin()
+      );
+      allow list: if isSignedIn();
+      allow create: if (isOwner(patientId) || isAdmin()) 
+        && incoming().patientId == patientId
+        && incoming().patientId == request.auth.uid;
+      allow update: if (isOwner(patientId) || isAdmin())
+        && incoming().patientId == existing().patientId;
+      allow delete: if isAdmin();
+    }
+
+    // Subscriptions: /subscriptions/{subscriptionId}
+    match /subscriptions/{subscriptionId} {
+      allow get, list: if isSignedIn() && (
+        resource.data.userId == request.auth.uid || 
+        isAdmin()
+      );
+      allow create: if isSignedIn() && (
+        incoming().userId == request.auth.uid || 
+        isAdmin()
+      );
+      allow update: if isSignedIn() && (
+        existing().userId == request.auth.uid || 
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+  }
+}

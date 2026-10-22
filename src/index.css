@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-ar: 'Cairo', system-ui, -apple-system, sans-serif;
+    --font-en: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  }
+
+  html[dir="rtl"] {
+    font-family: var(--font-ar);
+  }
+
+  html[dir="ltr"] {
+    font-family: var(--font-en);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Glass and gradient effects */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.brand-gradient {
+  background: linear-gradient(135deg, #002244 0%, #003366 50%, #b8142a 100%);
+}
+
+.brand-gradient-btn {
+  background: linear-gradient(135deg, #003366 0%, #1e4b85 45%, #c4152e 100%);
+}
