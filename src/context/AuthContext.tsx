@@ -59,29 +59,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loadUserProfile = async (firebaseUser: User) => {
     try {
+      const isVerifiedSuperAdminEmail = 
+        firebaseUser.email?.trim().toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
+
+      let hasAdminDoc = false;
+      try {
+        const adminDocRef = doc(db, 'admins', firebaseUser.uid);
+        const adminSnap = await getDoc(adminDocRef);
+        hasAdminDoc = adminSnap.exists();
+      } catch {
+        hasAdminDoc = false;
+      }
+
+      const isUserAdmin = hasAdminDoc || isVerifiedSuperAdminEmail;
+      setIsAdmin(isUserAdmin);
+
       const userDocRef = doc(db, 'users', firebaseUser.uid);
       const userSnap = await getDoc(userDocRef);
 
-      const adminDocRef = doc(db, 'admins', firebaseUser.uid);
-      const adminSnap = await getDoc(adminDocRef);
-
-      const isVerifiedSuperAdminEmail = 
-        firebaseUser.email?.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase() && 
-        firebaseUser.emailVerified;
-
-      if (adminSnap.exists() || isVerifiedSuperAdminEmail) {
-        setIsAdmin(true);
-      } else {
-        setIsAdmin(false);
-      }
-
       if (userSnap.exists()) {
         const profile = userSnap.data() as UserProfile;
-        setUserProfile(profile);
-        setNeedsOnboarding(false);
-        if (profile.role === 'super_admin') {
+        if (isVerifiedSuperAdminEmail && (profile.role !== 'super_admin' || profile.status !== 'approved')) {
+          const now = new Date().toISOString();
+          const elevatedProfile: UserProfile = {
+            ...profile,
+            role: 'super_admin',
+            status: 'approved',
+            updatedAt: now,
+          };
+          await setDoc(userDocRef, elevatedProfile, { merge: true });
+          await setDoc(doc(db, 'admins', firebaseUser.uid), {
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            role: 'super_admin',
+            grantedAt: now,
+          }, { merge: true });
+          setUserProfile(elevatedProfile);
           setIsAdmin(true);
+        } else {
+          setUserProfile(profile);
+          if (profile.role === 'super_admin' || isVerifiedSuperAdminEmail) {
+            setIsAdmin(true);
+          }
         }
+        setNeedsOnboarding(false);
       } else {
         // If user is verified super admin bootstrap
         if (isVerifiedSuperAdminEmail) {

@@ -99,6 +99,8 @@ export const PharmacyPortalWorkspace: React.FC<PharmacyPortalWorkspaceProps> = (
     quantity: 50,
     minStockAlert: 10,
     expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    benefits: '',
+    sideEffects: '',
     requiresPrescription: false,
     isAvailable: true,
     notes: '',
@@ -442,12 +444,17 @@ export const PharmacyPortalWorkspace: React.FC<PharmacyPortalWorkspaceProps> = (
           quantity: Number(medicineForm.quantity),
           minStockAlert: Number(medicineForm.minStockAlert),
           expiryDate: medicineForm.expiryDate,
+          benefits: medicineForm.benefits || '',
+          sideEffects: medicineForm.sideEffects || '',
           requiresPrescription: medicineForm.requiresPrescription,
           isAvailable: available,
           notes: medicineForm.notes,
+          pharmacyPhone: pharmacyProfile?.phone || userProfile?.phone || '',
+          pharmacyGovernorate: pharmacyProfile?.governorate || userProfile?.governorate || 'بغداد (Baghdad)',
+          pharmacyAddress: pharmacyProfile?.address || userProfile?.facilityName || '',
           updatedAt: now,
         });
-        showToast(language === 'ar' ? 'تم تحديث بيانات الدواء بالمخزون' : 'Medicine updated');
+        showToast(language === 'ar' ? 'تم تحديث بيانات الدواء والفوائد والمحاذير بالمخزون' : 'Medicine updated');
       } else {
         // Create new medicine item
         const mId = `med_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
@@ -455,6 +462,9 @@ export const PharmacyPortalWorkspace: React.FC<PharmacyPortalWorkspaceProps> = (
           id: mId,
           pharmacyId: user.uid,
           pharmacyName: pharmacyProfile?.pharmacyName || userProfile?.facilityName || 'الصيدلية',
+          pharmacyPhone: pharmacyProfile?.phone || userProfile?.phone || '',
+          pharmacyGovernorate: pharmacyProfile?.governorate || userProfile?.governorate || 'بغداد (Baghdad)',
+          pharmacyAddress: pharmacyProfile?.address || userProfile?.facilityName || '',
           name: medicineForm.name,
           activeIngredient: medicineForm.activeIngredient,
           brand: medicineForm.brand || medicineForm.name,
@@ -466,6 +476,8 @@ export const PharmacyPortalWorkspace: React.FC<PharmacyPortalWorkspaceProps> = (
           quantity: Number(medicineForm.quantity),
           minStockAlert: Number(medicineForm.minStockAlert),
           expiryDate: medicineForm.expiryDate,
+          benefits: medicineForm.benefits || '',
+          sideEffects: medicineForm.sideEffects || '',
           requiresPrescription: medicineForm.requiresPrescription,
           isAvailable: available,
           notes: medicineForm.notes,
@@ -498,6 +510,8 @@ export const PharmacyPortalWorkspace: React.FC<PharmacyPortalWorkspaceProps> = (
       quantity: 50,
       minStockAlert: 10,
       expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      benefits: '',
+      sideEffects: '',
       requiresPrescription: false,
       isAvailable: true,
       notes: '',
@@ -518,6 +532,8 @@ export const PharmacyPortalWorkspace: React.FC<PharmacyPortalWorkspaceProps> = (
       quantity: m.quantity,
       minStockAlert: m.minStockAlert || 5,
       expiryDate: m.expiryDate,
+      benefits: m.benefits || '',
+      sideEffects: m.sideEffects || '',
       requiresPrescription: m.requiresPrescription,
       isAvailable: m.isAvailable,
       notes: m.notes || '',
@@ -1312,6 +1328,17 @@ export const PharmacyPortalWorkspace: React.FC<PharmacyPortalWorkspaceProps> = (
                             {m.quantity} {language === 'ar' ? 'عبوة' : 'units'}
                           </span>
                         </div>
+                        {m.benefits && (
+                          <div className="pt-1.5 border-t border-slate-100 text-[11px] text-teal-800 line-clamp-2">
+                            <span className="font-bold text-teal-900">{language === 'ar' ? 'الفائدة:' : 'Benefits:'}</span> {m.benefits}
+                          </div>
+                        )}
+
+                        {m.sideEffects && (
+                          <div className="text-[11px] text-rose-700 line-clamp-2">
+                            <span className="font-bold text-rose-800">{language === 'ar' ? 'الأضرار/المحاذير:' : 'Side Effects:'}</span> {m.sideEffects}
+                          </div>
+                        )}
                       </div>
 
                       {/* Price Bar */}
@@ -2059,6 +2086,36 @@ export const PharmacyPortalWorkspace: React.FC<PharmacyPortalWorkspaceProps> = (
                   checked={medicineForm.requiresPrescription}
                   onChange={(e) => setMedicineForm({ ...medicineForm, requiresPrescription: e.target.checked })}
                   className="w-5 h-5 text-teal-600 rounded"
+                />
+              </div>
+
+              {/* Benefits & Medical Indications */}
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">
+                  {language === 'ar' ? 'فائدة الدواء ودواعي الاستعمال (Benefits & Uses) *' : 'Benefits & Medical Indications *'}
+                </label>
+                <textarea
+                  rows={2}
+                  required
+                  value={medicineForm.benefits}
+                  onChange={(e) => setMedicineForm({ ...medicineForm, benefits: e.target.value })}
+                  placeholder={language === 'ar' ? 'مثال: خافض للحرارة ومسكن للآلام المعتدلة والصداع، آلام المفاصل...' : 'E.g., Fever reducer, mild pain relief, headache treatment...'}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-[#00796b]"
+                />
+              </div>
+
+              {/* Side Effects & Warnings */}
+              <div>
+                <label className="block font-bold text-red-700 mb-1">
+                  {language === 'ar' ? 'أضرار الدواء والآثار الجانبية وموانع الاستعمال (Risks & Side Effects) *' : 'Side Effects & Precautions *'}
+                </label>
+                <textarea
+                  rows={2}
+                  required
+                  value={medicineForm.sideEffects}
+                  onChange={(e) => setMedicineForm({ ...medicineForm, sideEffects: e.target.value })}
+                  placeholder={language === 'ar' ? 'مثال: قد يسبب غثيان خفيف أو اضطراب معدة. يمنع لمرضى القصور الكبدي الحاد أو الحساسية المفرطة...' : 'E.g., Mild nausea, upset stomach. Contraindicated in severe liver impairment...'}
+                  className="w-full px-3 py-2 rounded-xl border border-red-200 text-sm focus:ring-2 focus:ring-red-400 bg-red-50/20"
                 />
               </div>
 

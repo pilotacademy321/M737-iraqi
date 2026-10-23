@@ -413,6 +413,9 @@ export interface MedicineItem {
   id: string;
   pharmacyId: string;
   pharmacyName: string;
+  pharmacyPhone?: string;
+  pharmacyGovernorate?: string;
+  pharmacyAddress?: string;
   name: string;
   activeIngredient: string;
   brand: string;
@@ -424,6 +427,8 @@ export interface MedicineItem {
   quantity: number;
   minStockAlert: number;
   expiryDate: string;
+  benefits?: string;
+  sideEffects?: string;
   requiresPrescription: boolean;
   isAvailable: boolean;
   notes?: string;
@@ -492,5 +497,39 @@ export interface PatientProfile {
   updatedAt: string;
 }
 
+export interface SubscriptionPlan {
+  id: string;
+  nameAr: string;
+  nameEn: string;
+  targetRole: UserRole | 'all';
+  priceIqd: number;
+  billingPeriod: 'monthly' | 'quarterly' | 'yearly' | 'custom';
+  descriptionAr: string;
+  descriptionEn: string;
+  featuresAr: string[];
+  featuresEn: string[];
+  isPopular?: boolean;
+  isActive: boolean;
+  maxDoctors?: number;
+  maxStaff?: number;
+  updatedAt: string;
+  updatedBy?: string;
+}
 
-
+export interface UserSubscription {
+  id: string;
+  userId: string;
+  userEmail: string;
+  userName: string;
+  userRole: UserRole;
+  facilityName?: string;
+  planId: string;
+  planName: string;
+  customPriceIqd: number;
+  status: 'active' | 'pending' | 'expired' | 'cancelled';
+  startDate: string;
+  endDate: string;
+  notes?: string;
+  updatedAt: string;
+  updatedBy?: string;
+}

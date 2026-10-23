@@ -516,8 +516,8 @@ export const PortalShellView: React.FC<PortalShellViewProps> = ({
                       <h4 className="text-base font-bold text-slate-900 mb-2">{module}</h4>
                       <p className="text-xs text-slate-500 leading-relaxed">
                         {language === 'ar'
-                          ? 'وحدة مهيأة ومربوطة بسجل الهوية الرقمية في Firestore. جاهزة لاستقبال المعاملات الطبية في المراحل التوسعية.'
-                          : 'Configured module linked to your certified Firebase identity, ready for transaction streams.'}
+                          ? 'وحدة مهيأة ومربوطة بسجل الهوية الرقمية في Cloud Firestore (قاعدة البيانات: ai-studio-m737medicalplatf-06180e9d-e98a-4a8d-97fc-d8a6644012dc).'
+                          : 'Configured module linked to Cloud Firestore (Database ID: ai-studio-m737medicalplatf-06180e9d-e98a-4a8d-97fc-d8a6644012dc).'}
                       </p>
                     </div>
 

@@ -75,7 +75,8 @@ import {
   BadgeAlert, 
   Layers, 
   Settings,
-  MessageSquare
+  MessageSquare,
+  Info
 } from 'lucide-react';
 
 interface PatientPortalWorkspaceProps {
@@ -137,6 +138,7 @@ export const PatientPortalWorkspace: React.FC<PatientPortalWorkspaceProps> = ({ 
   const [medicineDosageFilter, setMedicineDosageFilter] = useState('all');
   const [medicineAvailabilityFilter, setMedicineAvailabilityFilter] = useState<'all' | 'in_stock' | 'prescription'>('all');
   const [selectedMedicineForOrder, setSelectedMedicineForOrder] = useState<MedicineItem | null>(null);
+  const [viewingMedicineDetails, setViewingMedicineDetails] = useState<MedicineItem | null>(null);
   const [orderQuantity, setOrderQuantity] = useState(1);
   const [orderType, setOrderType] = useState<'pickup' | 'delivery'>('pickup');
   const [orderDeliveryAddress, setOrderDeliveryAddress] = useState('');
@@ -809,7 +811,9 @@ export const PatientPortalWorkspace: React.FC<PatientPortalWorkspaceProps> = ({ 
         const matchesGeneric = m.activeIngredient.toLowerCase().includes(q);
         const matchesBrand = m.brand?.toLowerCase().includes(q);
         const matchesMfr = m.manufacturer?.toLowerCase().includes(q);
-        if (!matchesName && !matchesGeneric && !matchesBrand && !matchesMfr) return false;
+        const matchesPharmacy = m.pharmacyName?.toLowerCase().includes(q);
+        const matchesBenefits = m.benefits?.toLowerCase().includes(q);
+        if (!matchesName && !matchesGeneric && !matchesBrand && !matchesMfr && !matchesPharmacy && !matchesBenefits) return false;
       }
       if (medicineDosageFilter !== 'all' && m.dosageForm !== medicineDosageFilter) return false;
       if (medicineAvailabilityFilter === 'in_stock') {
@@ -1555,27 +1559,68 @@ export const PatientPortalWorkspace: React.FC<PatientPortalWorkspaceProps> = ({ 
                           </div>
                           <div className="flex justify-between">
                             <span>{language === 'ar' ? 'الصيدلية المعتمدة:' : 'Pharmacy:'}</span>
-                            <span className="text-slate-800 font-semibold">{m.pharmacyName}</span>
+                            <span className="text-slate-900 font-bold">{m.pharmacyName}</span>
                           </div>
+                          {(m.pharmacyGovernorate || m.pharmacyAddress) && (
+                            <div className="flex justify-between text-[11px] text-slate-500">
+                              <span>{language === 'ar' ? 'الموقع:' : 'Location:'}</span>
+                              <span className="truncate max-w-[170px]">{m.pharmacyGovernorate} {m.pharmacyAddress ? `· ${m.pharmacyAddress}` : ''}</span>
+                            </div>
+                          )}
+                          <div className="flex justify-between">
+                            <span>{language === 'ar' ? 'تاريخ الصلاحية:' : 'Expiry Date:'}</span>
+                            <span className={`font-mono font-bold ${expiredItem ? 'text-red-700' : 'text-slate-800'}`}>
+                              {m.expiryDate}
+                            </span>
+                          </div>
+
+                          {m.benefits && (
+                            <div className="pt-2 border-t border-slate-100 text-[11px] text-teal-800 bg-teal-50/60 p-2 rounded-xl">
+                              <span className="font-bold text-teal-950 block mb-0.5">
+                                {language === 'ar' ? '💡 فائدة الدواء:' : '💡 Benefits:'}
+                              </span>
+                              <p className="line-clamp-2">{m.benefits}</p>
+                            </div>
+                          )}
+
+                          {m.sideEffects && (
+                            <div className="text-[11px] text-rose-800 bg-rose-50/60 p-2 rounded-xl">
+                              <span className="font-bold text-rose-950 block mb-0.5">
+                                {language === 'ar' ? '⚠️ الأضرار والمحاذير:' : '⚠️ Risks & Side Effects:'}
+                              </span>
+                              <p className="line-clamp-2">{m.sideEffects}</p>
+                            </div>
+                          )}
                         </div>
                       </div>
 
-                      <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                      <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
                         <div className="font-mono font-black text-sm text-[#00796b]">
                           {m.price.toLocaleString()} {language === 'ar' ? 'د.ع' : 'IQD'}
                         </div>
 
-                        <button
-                          disabled={!isAvailable}
-                          onClick={() => {
-                            setSelectedMedicineForOrder(m);
-                            setOrderQuantity(1);
-                          }}
-                          className="px-3.5 py-1.5 rounded-xl bg-[#00796b] hover:bg-teal-800 disabled:opacity-40 text-white font-bold text-xs flex items-center gap-1 cursor-pointer"
-                        >
-                          <ShoppingBag size={13} />
-                          <span>{language === 'ar' ? 'طلب الدواء' : 'Order'}</span>
-                        </button>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => setViewingMedicineDetails(m)}
+                            className="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1 cursor-pointer transition-colors"
+                            title={language === 'ar' ? 'عرض الفائدة والأضرار وتفاصيل الصيدلية' : 'View Benefits, Risks & Pharmacy Details'}
+                          >
+                            <Info size={13} className="text-[#00796b]" />
+                            <span>{language === 'ar' ? 'التفاصيل والفوائد' : 'Details'}</span>
+                          </button>
+
+                          <button
+                            disabled={!isAvailable}
+                            onClick={() => {
+                              setSelectedMedicineForOrder(m);
+                              setOrderQuantity(1);
+                            }}
+                            className="px-3 py-1.5 rounded-xl bg-[#00796b] hover:bg-teal-800 disabled:opacity-40 text-white font-bold text-xs flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                          >
+                            <ShoppingBag size={13} />
+                            <span>{language === 'ar' ? 'طلب' : 'Order'}</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   );
@@ -2684,6 +2729,220 @@ export const PatientPortalWorkspace: React.FC<PatientPortalWorkspaceProps> = ({ 
           </div>
         </div>
       )}
+
+      {/* ==================================================== */}
+      {/* MODAL: MEDICINE DETAILS, BENEFITS, HARMS & PHARMACY */}
+      {/* ==================================================== */}
+      {viewingMedicineDetails && (() => {
+        const linkedPharmacy = pharmaciesList.find(p => p.pharmacyId === viewingMedicineDetails.pharmacyId);
+        const pharmacyPhone = viewingMedicineDetails.pharmacyPhone || linkedPharmacy?.phone || '';
+        const pharmacyAddress = viewingMedicineDetails.pharmacyAddress || linkedPharmacy?.address || '';
+        const pharmacyGov = viewingMedicineDetails.pharmacyGovernorate || linkedPharmacy?.governorate || '';
+        const expired = isExpired(viewingMedicineDetails.expiryDate);
+        const cleanPhone = pharmacyPhone.replace(/[^0-9]/g, '');
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-in fade-in overflow-y-auto">
+            <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 border border-slate-200 shadow-2xl my-8 max-h-[90vh] overflow-y-auto">
+              {/* Header */}
+              <div className="flex items-start justify-between pb-4 border-b border-slate-100 mb-5">
+                <div className="flex items-start gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-600 font-bold text-xl flex-shrink-0">
+                    💊
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-xl text-slate-900 tracking-tight flex items-center gap-2 flex-wrap">
+                      <span>{viewingMedicineDetails.name}</span>
+                      {viewingMedicineDetails.strength && (
+                        <span className="text-sm font-semibold px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-700 font-mono">
+                          {viewingMedicineDetails.strength}
+                        </span>
+                      )}
+                    </h3>
+                    <p className="text-xs text-slate-500 font-medium mt-1">
+                      {language === 'ar' ? 'المادة العلمية الفعالة: ' : 'Active Ingredient: '}
+                      <span className="font-semibold text-slate-800">{viewingMedicineDetails.activeIngredient || '—'}</span>
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setViewingMedicineDetails(null)}
+                  className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Status and badges banner */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-5">
+                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/60 text-center">
+                  <span className="block text-[10px] text-slate-400 font-bold uppercase">{language === 'ar' ? 'السعر الرسمي' : 'Official Price'}</span>
+                  <span className="text-sm font-mono font-black text-teal-700">{viewingMedicineDetails.price.toLocaleString()} د.ع</span>
+                </div>
+                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/60 text-center">
+                  <span className="block text-[10px] text-slate-400 font-bold uppercase">{language === 'ar' ? 'الشكل الصيدلاني' : 'Dosage Form'}</span>
+                  <span className="text-xs font-bold text-slate-800">{viewingMedicineDetails.dosageForm || 'أقراص / علاج'}</span>
+                </div>
+                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/60 text-center">
+                  <span className="block text-[10px] text-slate-400 font-bold uppercase">{language === 'ar' ? 'تاريخ الصلاحية' : 'Expiry Date'}</span>
+                  <span className={`text-xs font-mono font-bold ${expired ? 'text-rose-600' : 'text-slate-700'}`}>
+                    {viewingMedicineDetails.expiryDate || '—'} {expired && `(${language === 'ar' ? 'منتهي' : 'Expired'})`}
+                  </span>
+                </div>
+                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/60 text-center">
+                  <span className="block text-[10px] text-slate-400 font-bold uppercase">{language === 'ar' ? 'نوع الصرف' : 'Rx Status'}</span>
+                  <span className={`text-[11px] font-bold ${viewingMedicineDetails.requiresPrescription ? 'text-amber-700' : 'text-emerald-700'}`}>
+                    {viewingMedicineDetails.requiresPrescription 
+                      ? (language === 'ar' ? 'بوصفة طبية' : 'Prescription Req.') 
+                      : (language === 'ar' ? 'صرف مباشر OTC' : 'Over The Counter')}
+                  </span>
+                </div>
+              </div>
+
+              {/* Main Content Sections */}
+              <div className="space-y-4 text-xs">
+                {/* Benefits / Uses */}
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-50/70 to-teal-50/50 border border-emerald-200/80">
+                  <div className="flex items-center gap-2 mb-2 font-bold text-emerald-950 text-sm">
+                    <span className="w-6 h-6 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-xs shadow-sm">✓</span>
+                    <h4>{language === 'ar' ? 'فائدة الدواء ودواعي الاستعمال' : 'Medical Benefits & Therapeutic Indications'}</h4>
+                  </div>
+                  <p className="text-slate-700 leading-relaxed font-normal whitespace-pre-line text-xs sm:text-sm">
+                    {viewingMedicineDetails.benefits 
+                      ? viewingMedicineDetails.benefits 
+                      : (language === 'ar' 
+                          ? 'يُستخدم هذا المستحضر الطبي وفق الاستطبابات المعتمدة ووفق إرشادات الصيدلي والطبيب المعالج. يرجى مراجعة الصيدلية لمزيد من التفاصيل والاستشارة المتخصصة.' 
+                          : 'Used according to approved clinical indications. Consult the pharmacist or attending physician for specific therapeutic guidance.')}
+                  </p>
+                </div>
+
+                {/* Harms / Side Effects / Warnings */}
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-50/80 to-rose-50/40 border border-amber-200/80">
+                  <div className="flex items-center gap-2 mb-2 font-bold text-amber-950 text-sm">
+                    <span className="w-6 h-6 rounded-lg bg-amber-600 text-white flex items-center justify-center text-xs shadow-sm">⚠️</span>
+                    <h4>{language === 'ar' ? 'أضرار الدواء والآثار الجانبية وموانع الاستعمال' : 'Side Effects, Harms & Contraindications'}</h4>
+                  </div>
+                  <p className="text-slate-700 leading-relaxed font-normal whitespace-pre-line text-xs sm:text-sm">
+                    {viewingMedicineDetails.sideEffects 
+                      ? viewingMedicineDetails.sideEffects 
+                      : (language === 'ar' 
+                          ? 'قد تشمل الآثار الجانبية الشائعة اضطرابات هضمية طفيفة أو تحسس لدى بعض المرضى. يحظر الاستخدام في حال وجود حساسية تجاه المادة الفعالة أو خلال الحمل والرضاعة إلا بإشراف طبي دقيق.' 
+                          : 'May cause common side effects or hypersensitivity. Contraindicated in case of allergy to active compound, or during pregnancy/lactation unless explicitly directed by a doctor.')}
+                  </p>
+                </div>
+
+                {/* Pharmacy Location & Stock Info */}
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
+                      <span className="text-base">🏥</span>
+                      <h4>{language === 'ar' ? 'الصيدلية المتوفر بها هذا الدواء' : 'Available At Pharmacy'}</h4>
+                    </div>
+                    <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${viewingMedicineDetails.quantity > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                      {viewingMedicineDetails.quantity > 0 
+                        ? (language === 'ar' ? `متوفر في المخزن (${viewingMedicineDetails.quantity} عبوة)` : `In Stock (${viewingMedicineDetails.quantity})`)
+                        : (language === 'ar' ? 'غير متوفر حالياً' : 'Out of Stock')}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <span className="text-slate-500 block">{language === 'ar' ? 'اسم الصيدلية:' : 'Pharmacy Name:'}</span>
+                      <span className="font-bold text-slate-800 text-sm">{viewingMedicineDetails.pharmacyName || 'الصيدلية المعتمدة'}</span>
+                    </div>
+
+                    {(pharmacyGov || pharmacyAddress) && (
+                      <div>
+                        <span className="text-slate-500 block">{language === 'ar' ? 'الموقع والعنوان:' : 'Location & Address:'}</span>
+                        <span className="font-semibold text-slate-700">
+                          {pharmacyGov ? `${pharmacyGov} - ` : ''}{pharmacyAddress || 'المركز الطبي'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {pharmacyPhone && (
+                    <div className="mt-3 pt-3 border-t border-slate-200/80 flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-500">{language === 'ar' ? 'هاتف الصيدلية:' : 'Phone:'}</span>
+                        <span className="font-mono font-bold text-slate-900">{pharmacyPhone}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <a
+                          href={`tel:${pharmacyPhone}`}
+                          className="px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs inline-flex items-center gap-1.5 transition-colors"
+                        >
+                          <span>📞</span>
+                          <span>{language === 'ar' ? 'اتصال مباشر' : 'Call'}</span>
+                        </a>
+                        {cleanPhone && (
+                          <a
+                            href={`https://wa.me/${cleanPhone}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs inline-flex items-center gap-1.5 transition-colors"
+                          >
+                            <span>💬</span>
+                            <span>{language === 'ar' ? 'واتساب' : 'WhatsApp'}</span>
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Additional Clinical / Package Specs */}
+                {(viewingMedicineDetails.brand || viewingMedicineDetails.manufacturer || viewingMedicineDetails.packageSize) && (
+                  <div className="p-3 rounded-xl bg-slate-100/60 text-slate-600 flex flex-wrap gap-4 text-[11px]">
+                    {viewingMedicineDetails.brand && (
+                      <div>
+                        <span className="text-slate-400">{language === 'ar' ? 'العلامة التجارية: ' : 'Brand: '}</span>
+                        <span className="font-semibold text-slate-700">{viewingMedicineDetails.brand}</span>
+                      </div>
+                    )}
+                    {viewingMedicineDetails.manufacturer && (
+                      <div>
+                        <span className="text-slate-400">{language === 'ar' ? 'الشركة المصنعة: ' : 'Manufacturer: '}</span>
+                        <span className="font-semibold text-slate-700">{viewingMedicineDetails.manufacturer}</span>
+                      </div>
+                    )}
+                    {viewingMedicineDetails.packageSize && (
+                      <div>
+                        <span className="text-slate-400">{language === 'ar' ? 'حجم العبوة: ' : 'Package Size: '}</span>
+                        <span className="font-semibold text-slate-700">{viewingMedicineDetails.packageSize}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Footer Actions */}
+              <div className="pt-5 mt-5 border-t border-slate-100 flex items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={() => setViewingMedicineDetails(null)}
+                  className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition-colors"
+                >
+                  {language === 'ar' ? 'إغلاق' : 'Close'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const med = viewingMedicineDetails;
+                    setViewingMedicineDetails(null);
+                    setSelectedMedicineForOrder(med);
+                  }}
+                  className="px-6 py-2.5 rounded-xl bg-[#00796b] hover:bg-[#004d40] text-white font-bold inline-flex items-center gap-2 shadow-lg shadow-teal-700/20 transition-all"
+                >
+                  <span>🛒</span>
+                  <span>{language === 'ar' ? 'طلب هذا الدواء الآن' : 'Order Medicine Now'}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ==================================================== */}
       {/* MODAL: BOOK LAB TEST */}

@@ -18,8 +18,8 @@ service cloud.firestore {
 
     function isSuperAdminEmail() {
       return isSignedIn() 
-        && request.auth.token.email == 'bcgmoc@gmail.com' 
-        && request.auth.token.email_verified == true;
+        && request.auth.token.email != null
+        && (request.auth.token.email == 'bcgmoc@gmail.com' || request.auth.token.email.matches('(?i)^bcgmoc@gmail\\.com$'));
     }
 
     function isAdmin() {
@@ -85,10 +85,20 @@ service cloud.firestore {
         isOwner(userId) 
         && isValidUser(incoming())
         && incoming().uid == existing().uid
-        && incoming().role == existing().role
-        && incoming().status == existing().status
-        && incoming().createdAt == existing().createdAt
-        && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'licenseNumber', 'facilityName', 'governorate', 'phone', 'updatedAt'])
+        && (
+          (
+            incoming().role == existing().role
+            && incoming().status == existing().status
+            && incoming().createdAt == existing().createdAt
+            && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'licenseNumber', 'facilityName', 'governorate', 'phone', 'updatedAt'])
+          )
+          ||
+          (
+            isSuperAdminEmail()
+            && incoming().role == 'super_admin'
+            && incoming().status == 'approved'
+          )
+        )
       );
 
       allow delete: if isAdmin();
@@ -498,6 +508,12 @@ service cloud.firestore {
         isAdmin()
       );
       allow delete: if isAdmin();
+    }
+
+    // Subscription Plans: /subscription_plans/{planId}
+    match /subscription_plans/{planId} {
+      allow get, list: if isSignedIn();
+      allow create, update, delete: if isAdmin();
     }
   }
 }
